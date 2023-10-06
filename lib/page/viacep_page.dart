@@ -18,7 +18,6 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
   var viaCEPRepository = ViaCEPRepository();
   var cepController = TextEditingController(text: "");
   var loading = false;
-  bool _hasError = false;
 
   @override
   void initState() {
@@ -29,13 +28,6 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
   obterCEPS() async {
     _viaCEPBack4AppModel = await cepRepository.getCEP();
     setState(() {});
-  }
-
-  _validateInput(String text) {
-    setState(() {
-      // Condição de validação (por exemplo, se o texto estiver vazio)
-      _hasError = text.isEmpty;
-    });
   }
 
   @override
