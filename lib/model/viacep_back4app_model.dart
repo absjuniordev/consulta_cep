@@ -1,27 +1,27 @@
 class ViaCEPBack4AppModel {
-  List<Results>? results;
+  List<ViaCEPBack4> cep = [];
 
-  ViaCEPBack4AppModel({this.results});
+  ViaCEPBack4AppModel(this.cep);
 
   ViaCEPBack4AppModel.fromJson(Map<String, dynamic> json) {
     if (json['results'] != null) {
-      results = <Results>[];
+      cep = <ViaCEPBack4>[];
       json['results'].forEach((v) {
-        results!.add(new Results.fromJson(v));
+        cep.add(ViaCEPBack4.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    if (results != null) {
-      data['results'] = results!.map((v) => v.toJson()).toList();
-    }
+
+    data['results'] = cep.map((v) => v.toJson()).toList();
+
     return data;
   }
 }
 
-class Results {
+class ViaCEPBack4 {
   String objectId = "";
   String cep = "";
   String logradouro = "";
@@ -30,13 +30,11 @@ class Results {
   String localidade = "";
   String uf = "";
   String ibge = "";
-  String gia = "";
   String ddd = "";
-  String siafi = "";
   String createdAt = "";
   String updatedAt = "";
 
-  Results(
+  ViaCEPBack4(
       this.objectId,
       this.cep,
       this.logradouro,
@@ -45,13 +43,22 @@ class Results {
       this.localidade,
       this.uf,
       this.ibge,
-      this.gia,
       this.ddd,
-      this.siafi,
       this.createdAt,
       this.updatedAt);
 
-  Results.fromJson(Map<String, dynamic> json) {
+  ViaCEPBack4.criar(
+    this.cep,
+    this.logradouro,
+    this.complemento,
+    this.bairro,
+    this.localidade,
+    this.uf,
+    this.ibge,
+    this.ddd,
+  );
+
+  ViaCEPBack4.fromJson(Map<String, dynamic> json) {
     objectId = json['objectId'];
     cep = json['cep'];
     logradouro = json['logradouro'];
@@ -60,9 +67,7 @@ class Results {
     localidade = json['localidade'];
     uf = json['uf'];
     ibge = json['ibge'];
-    gia = json['gia'];
     ddd = json['ddd'];
-    siafi = json['siafi'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
   }
@@ -77,11 +82,23 @@ class Results {
     data['localidade'] = localidade;
     data['uf'] = uf;
     data['ibge'] = ibge;
-    data['gia'] = gia;
     data['ddd'] = ddd;
-    data['siafi'] = siafi;
     data['createdAt'] = createdAt;
     data['updatedAt'] = updatedAt;
+    return data;
+  }
+
+  Map<String, dynamic> toJsonEndPoint() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['cep'] = cep;
+    data['logradouro'] = logradouro;
+    data['complemento'] = complemento;
+    data['bairro'] = bairro;
+    data['localidade'] = localidade;
+    data['uf'] = uf;
+    data['ibge'] = ibge;
+    data['ddd'] = ddd;
+
     return data;
   }
 }

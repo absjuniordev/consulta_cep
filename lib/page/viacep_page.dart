@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:viacep/model/viacep_model.dart';
+import 'package:viacep/repository/viacep_back4app_repository.dart';
 import 'package:viacep/repository/viacep_repository.dart';
+import '../model/viacep_back4app_model.dart';
 
 class ViaCEPPage extends StatefulWidget {
   const ViaCEPPage({super.key});
@@ -10,10 +12,31 @@ class ViaCEPPage extends StatefulWidget {
 }
 
 class _ViaCEPPageState extends State<ViaCEPPage> {
-  var viaCEPModel = <ViaCEPModel>[];
+  var _viaCEPBack4AppModel = ViaCEPBack4AppModel([]);
+  var cepRepository = ViaCEPBack4AppRepository();
   var _viaCEPModel = ViaCEPModel();
   var viaCEPRepository = ViaCEPRepository();
-  var cepController = TextEditingController();
+  var cepController = TextEditingController(text: "");
+  var loading = false;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    obterCEPS();
+  }
+
+  obterCEPS() async {
+    _viaCEPBack4AppModel = await cepRepository.getCEP();
+    setState(() {});
+  }
+
+  _validateInput(String text) {
+    setState(() {
+      // Condição de validação (por exemplo, se o texto estiver vazio)
+      _hasError = text.isEmpty;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +69,7 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                   const SizedBox(height: 10),
                   TextField(
                     decoration: const InputDecoration(
+                      error: AlertDialog(),
                       label: Text("CEP"),
                       hintText: "44.000-000",
                     ),
@@ -53,12 +77,44 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                     maxLength: 8,
                     keyboardType: TextInputType.number,
                     onChanged: (value) async {
-                      var cep = value;
-                      _viaCEPModel = await viaCEPRepository.consultarCEP(cep);
-                      ViaCEPModel(bairro: _viaCEPModel.bairro);
-                      // viaCEPModel.add(await viaCEPRepository.consultarCEP(cep));
+                      if (value.length == 8) {
+                        setState(() {
+                          loading = true;
+                        });
+                        var result = value;
+                        _viaCEPModel =
+                            await viaCEPRepository.consultarCEP(result);
+
+                        if (_viaCEPModel.logradouro == null) {
+                          cepController.text = "";
+                          setState(() {
+                            loading = false;
+                          });
+                          return;
+                        }
+
+                        await cepRepository.postCEP(
+                          ViaCEPBack4.criar(
+                              _viaCEPModel.cep ?? "",
+                              _viaCEPModel.logradouro ?? "",
+                              _viaCEPModel.complemento ?? "",
+                              _viaCEPModel.bairro ?? "",
+                              _viaCEPModel.localidade ?? "",
+                              _viaCEPModel.uf ?? "",
+                              _viaCEPModel.ibge ?? "",
+                              _viaCEPModel.ddd ?? ""),
+                        );
+                        cepController.text = "";
+                      }
+                      setState(() {
+                        loading = false;
+                      });
+                      obterCEPS();
                     },
-                  )
+                  ),
+                  Visibility(
+                      visible: loading,
+                      child: const CircularProgressIndicator()),
                 ],
               ),
             ),
@@ -86,12 +142,15 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                   const SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: viaCEPModel.length,
-                      itemBuilder: (context, index) {
-                        var cep = viaCEPModel[index];
-                        debugPrint(viaCEPModel.length.toString());
+                      itemCount: _viaCEPBack4AppModel.cep.length,
+                      itemBuilder: (BuildContext bc, int index) {
+                        var cep = _viaCEPBack4AppModel.cep[index];
+                        debugPrint(_viaCEPBack4AppModel.cep.length.toString());
                         return Dismissible(
-                          onDismissed: (direction) {},
+                          onDismissed:
+                              (DismissDirection dismissDirectionon) async {
+                            await cepRepository.deleteCEP(cep.objectId);
+                          },
                           key: Key(cep.cep.toString()),
                           child: Card(
                             elevation: 5,
@@ -100,10 +159,10 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                                   vertical: 8, horizontal: 30),
                               child: Column(
                                 children: [
-                                  Text("Rua: ${cep.logradouro ?? ""}"),
-                                  Text("Bairro: ${cep.bairro ?? ""}"),
-                                  Text("Cidade: ${cep.localidade ?? ""}"),
-                                  Text("Estado: ${cep.uf ?? ""}"),
+                                  Text("Rua: ${cep.logradouro}"),
+                                  Text("Bairro: ${cep.bairro}"),
+                                  Text("Cidade: ${cep.localidade}"),
+                                  Text("Estado: ${cep.uf}"),
                                 ],
                               ),
                             ),
