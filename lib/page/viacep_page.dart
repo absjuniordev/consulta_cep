@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:viacep/model/viacep_model.dart';
 import 'package:viacep/repository/viacep_back4app_repository.dart';
 import 'package:viacep/repository/viacep_repository.dart';
@@ -43,8 +44,8 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
               child: Column(
                 children: [
                   Card(
-                    elevation: 5,
-                    color: Colors.amber,
+                    elevation: 30,
+                    color: const Color.fromARGB(0, 255, 193, 7),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       height: 40,
@@ -60,14 +61,18 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                   ),
                   const SizedBox(height: 10),
                   TextField(
+                    canRequestFocus:
+                        cepController.text.length == 8 ? false : true,
                     decoration: const InputDecoration(
-                      error: AlertDialog(),
                       label: Text("CEP"),
                       hintText: "44.000-000",
                     ),
                     controller: cepController,
                     maxLength: 8,
                     keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                    ],
                     onChanged: (value) async {
                       if (value.length == 8) {
                         setState(() {
@@ -82,9 +87,59 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                           setState(() {
                             loading = false;
                           });
+                          // ignore: use_build_context_synchronously
+                          showDialog(
+                            context: (context),
+                            builder: (BuildContext bc) {
+                              return AlertDialog(
+                                backgroundColor: Colors.red,
+                                title: const Text("CEP INVALIDO"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      "Sair",
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
                           return;
                         }
-
+                        for (var element in _viaCEPBack4AppModel.cep) {
+                          if (element.cep == _viaCEPModel.cep) {
+                            cepController.text = "";
+                            setState(() {
+                              loading = false;
+                            });
+                            // ignore: use_build_context_synchronously
+                            showDialog(
+                              context: (context),
+                              builder: (BuildContext bc) {
+                                return AlertDialog(
+                                  backgroundColor: Colors.green,
+                                  title: const Text("CEP JA CADASTRADO"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text(
+                                        "Sair",
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            return;
+                          }
+                        }
                         await cepRepository.postCEP(
                           ViaCEPBack4.criar(
                               _viaCEPModel.cep ?? "",
@@ -96,6 +151,7 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                               _viaCEPModel.ibge ?? "",
                               _viaCEPModel.ddd ?? ""),
                         );
+
                         cepController.text = "";
                       }
                       setState(() {
@@ -128,10 +184,10 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
               child: Column(
                 children: [
                   const Text(
-                    "Endereço",
+                    "Lista de Endereço",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 15),
                   Expanded(
                     child: ListView.builder(
                       itemCount: _viaCEPBack4AppModel.cep.length,
@@ -144,18 +200,92 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                             await cepRepository.deleteCEP(cep.objectId);
                           },
                           key: Key(cep.cep.toString()),
-                          child: Card(
-                            elevation: 5,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 30),
-                              child: Column(
-                                children: [
-                                  Text("Rua: ${cep.logradouro}"),
-                                  Text("Bairro: ${cep.bairro}"),
-                                  Text("Cidade: ${cep.localidade}"),
-                                  Text("Estado: ${cep.uf}"),
-                                ],
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: (context),
+                                builder: (BuildContext bc) {
+                                  return AlertDialog(
+                                    backgroundColor:
+                                        const Color.fromARGB(204, 255, 193, 7),
+                                    title: const Text(
+                                        "Informações Complementares"),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "CEP: ${cep.cep}",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Logradouro: ${cep.logradouro}",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Bairro: ${cep.bairro}",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Cidade: ${cep.localidade}",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Estado: ${cep.uf}",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        Text(
+                                          "População: ${cep.ibge}",
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text(
+                                          "Sair",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            focusColor: Colors.amber,
+                            child: Card(
+                              elevation: 5,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 30),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("CEP: ${cep.cep}"),
+                                    Text("Logradouro: ${cep.logradouro}"),
+                                    Text("Bairro: ${cep.bairro}"),
+                                    Text("Cidade: ${cep.localidade}"),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

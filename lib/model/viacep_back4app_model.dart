@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 class ViaCEPBack4AppModel {
   List<ViaCEPBack4> cep = [];
 
@@ -35,17 +36,18 @@ class ViaCEPBack4 {
   String updatedAt = "";
 
   ViaCEPBack4(
-      this.objectId,
-      this.cep,
-      this.logradouro,
-      this.complemento,
-      this.bairro,
-      this.localidade,
-      this.uf,
-      this.ibge,
-      this.ddd,
-      this.createdAt,
-      this.updatedAt);
+    this.objectId,
+    this.cep,
+    this.logradouro,
+    this.complemento,
+    this.bairro,
+    this.localidade,
+    this.uf,
+    this.ibge,
+    this.ddd,
+    this.createdAt,
+    this.updatedAt,
+  );
 
   ViaCEPBack4.criar(
     this.cep,
@@ -57,7 +59,6 @@ class ViaCEPBack4 {
     this.ibge,
     this.ddd,
   );
-
   ViaCEPBack4.fromJson(Map<String, dynamic> json) {
     objectId = json['objectId'];
     cep = json['cep'];
@@ -100,5 +101,10 @@ class ViaCEPBack4 {
     data['ddd'] = ddd;
 
     return data;
+  }
+
+  @override
+  String toString() {
+    return 'ViaCEPBack4(objectId: $objectId, cep: $cep, logradouro: $logradouro, complemento: $complemento, bairro: $bairro, localidade: $localidade, uf: $uf, ibge: $ibge, ddd: $ddd, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
