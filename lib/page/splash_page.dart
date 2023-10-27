@@ -1,5 +1,6 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:viacep/page/viacep_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -13,47 +14,48 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: Scaffold(
-      backgroundColor: Colors.amber,
-      body: Center(
-        child: Column(
-          children: [
-            SizedBox(
-              width: 250.0,
-              child: DefaultTextStyle(
+      child: Scaffold(
+        backgroundColor: Colors.amber,
+        body: Center(
+          child: Row(
+            children: <Widget>[
+              const SizedBox(width: 20.0, height: 100.0),
+              const Text(
+                'Via CEP',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 20.0, height: 100.0),
+              DefaultTextStyle(
                 style: const TextStyle(
-                  fontSize: 35,
-                  color: Color.fromARGB(255, 15, 15, 15),
-                  // shadows: [
-                  //   Shadow(
-                  //     blurRadius: 7.0,
-                  //     color: Color.fromARGB(255, 22, 7, 238),
-                  //     offset: Offset(0, 0),
-                  //   ),
-                  // ],
+                  fontSize: 40.0,
+                  fontFamily: 'Horizon',
                 ),
                 child: AnimatedTextKit(
                   totalRepeatCount: 1,
-                  repeatForever: false,
+                  animatedTexts: [
+                    RotateAnimatedText('Simples'),
+                    RotateAnimatedText('Facil'),
+                    RotateAnimatedText('Diferente'),
+                  ],
                   onFinished: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (builder) => const ViaCEPPage(),
+                      PageTransition(
+                        duration: const Duration(milliseconds: 999),
+                        type: PageTransitionType.fade,
+                        child: const ViaCEPPage(),
                       ),
                     );
                   },
-                  animatedTexts: [
-                    FlickerAnimatedText('Busca CEP'),
-                    FlickerAnimatedText('Seu App'),
-                    FlickerAnimatedText("de buscas"),
-                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }

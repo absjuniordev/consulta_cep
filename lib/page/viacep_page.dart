@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:viacep/model/viacep_model.dart';
@@ -53,7 +56,7 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                         height: 40,
                         width: 200,
                         child: const Text(
-                          "Buscar CEP",
+                          "Via CEP",
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w500,
@@ -62,27 +65,47 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    TextField(
-                      canRequestFocus:
-                          cepController.text.length == 8 ? false : true,
+                    TextFormField(
+                      // canRequestFocus:
+                      //     cepController.text.length == 8 ? false : true,
                       decoration: const InputDecoration(
                         label: Text("CEP"),
                         hintText: "44.000-000",
                       ),
                       controller: cepController,
-                      maxLength: 8,
+                      // maxLength: 8,
                       keyboardType: TextInputType.number,
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                      inputFormatters: [
+                        // obrigatório
+                        FilteringTextInputFormatter.digitsOnly,
+                        CepInputFormatter(),
                       ],
                       onChanged: (value) async {
-                        if (value.length == 8) {
+                        if (value.length == 10) {
+                          String cep = cepController.text;
+                          String numerosCep =
+                              cep.replaceAll(RegExp(r'[^0-9]'), '');
                           setState(() {
                             loading = true;
                           });
-                          var result = value;
+
+                          if (loading == true) {
+                            Timer(const Duration(seconds: 5), () {
+                              showDialog(
+                                  context: context,
+                                  builder: (bd) => const AlertDialog(
+                                        title:
+                                            Text("Tempo de consulta excedido"),
+                                      ));
+                              cepController.text = "";
+                              setState(() {
+                                loading = false;
+                              });
+                            });
+                          }
+
                           _viaCEPModel =
-                              await viaCEPRepository.consultarCEP(result);
+                              await viaCEPRepository.consultarCEP(numerosCep);
 
                           if (_viaCEPModel.logradouro == null) {
                             cepController.text = "";
@@ -170,150 +193,179 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                 ),
               ),
               const SizedBox(height: 35),
-              Container(
-                height: MediaQuery.of(context).size.height / 1.45,
-                width: double.infinity,
-                padding: const EdgeInsets.only(
-                  top: 15,
-                  left: 15,
-                ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(45),
-                    topRight: Radius.circular(45),
+              SingleChildScrollView(
+                child: Container(
+                  height: MediaQuery.of(context).size.height / 1.4,
+                  padding: const EdgeInsets.only(
+                    top: 15,
+                    left: 15,
                   ),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      "Lista de Endereço",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(45),
+                      topRight: Radius.circular(45),
                     ),
-                    const SizedBox(height: 15),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _viaCEPBack4AppModel.cep.length,
-                        itemBuilder: (BuildContext bc, int index) {
-                          var cep = _viaCEPBack4AppModel.cep[index];
-                          obterCEPS();
-                          return Dismissible(
-                            direction: DismissDirection.startToEnd,
-                            confirmDismiss:
-                                (DismissDirection dismissDirectionon) async {
-                              if (dismissDirectionon ==
-                                  DismissDirection.startToEnd) {
-                                setState(() {
-                                  delete = true;
-                                });
-                                return showDialog(
-                                  context: context,
-                                  builder: (builder) {
-                                    return AlertDialog(
-                                      title: const Text(
-                                          "Deseja realmente deletar?"),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            cepRepository
-                                                .deleteCEP(cep.objectId);
-                                            Navigator.pop(context);
-                                            setState(() {
-                                              delete = false;
-                                            });
-                                          },
-                                          child: const Text(
-                                            "Sim",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Lista de Endereço",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 15),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _viaCEPBack4AppModel.cep.length,
+                          itemBuilder: (BuildContext bc, int index) {
+                            var cep = _viaCEPBack4AppModel.cep[index];
+                            obterCEPS();
+                            return Dismissible(
+                              direction: DismissDirection.startToEnd,
+                              confirmDismiss:
+                                  (DismissDirection dismissDirectionon) async {
+                                if (dismissDirectionon ==
+                                    DismissDirection.startToEnd) {
+                                  return showDialog(
+                                    context: context,
+                                    builder: (builder) {
+                                      return AlertDialog(
+                                        title: const Text(
+                                            "Deseja realmente deletar ?"),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () async {
+                                              setState(() {
+                                                loading = true;
+                                              });
+                                              await cepRepository
+                                                  .deleteCEP(cep.objectId);
+                                              // ignore: use_build_context_synchronously
+                                              Navigator.pop(context);
+                                              setState(() {
+                                                loading = false;
+                                              });
+                                            },
+                                            child: const Text(
+                                              "Sim",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text(
-                                            "Não",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              }
-                              return null;
-                            },
-                            background: delete == true
-                                ? const CircularProgressIndicator(
-                                    color: Colors.red,
-                                  )
-                                : Container(
-                                    alignment: Alignment.centerLeft,
-                                    margin:
-                                        const EdgeInsets.symmetric(vertical: 8),
-                                    color: Colors.red,
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.delete,
-                                          ),
-                                          Text(
-                                            "Deletar",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                loading = false;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text(
+                                              "Não",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
                                             ),
                                           ),
                                         ],
-                                      ),
-                                    ),
-                                  ),
-                            key: Key(cep.cep.toString()),
-                            child: InkWell(
-                              onTap: () async {
-                                await detalhesPop(context, item: [
-                                  cep.cep,
-                                  cep.logradouro,
-                                  cep.bairro,
-                                  cep.localidade,
-                                  cep.uf,
-                                  cep.ibge,
-                                ]);
+                                      );
+                                    },
+                                  );
+                                }
+                                return null;
                               },
-                              focusColor: Colors.amber,
-                              child: Card(
-                                elevation: 5,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: SizedBox(
-                                    width: double.maxFinite,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text("CEP: ${cep.cep}"),
-                                        Text("Logradouro: ${cep.logradouro}"),
-                                        Text("Bairro: ${cep.bairro}"),
-                                        Text("Cidade: ${cep.localidade}"),
-                                      ],
+                              background: Container(
+                                alignment: Alignment.centerLeft,
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                color: Colors.red,
+                                child: const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete,
+                                      ),
+                                      Text(
+                                        "Deletar",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              key: Key(cep.cep.toString()),
+                              child: InkWell(
+                                onTap: () async {
+                                  await detalhesPop(context, item: [
+                                    cep.cep,
+                                    cep.logradouro,
+                                    cep.bairro,
+                                    cep.localidade,
+                                    cep.uf,
+                                    cep.ibge,
+                                  ]);
+                                },
+                                focusColor: Colors.amber,
+                                child: Card(
+                                  color:
+                                      const Color.fromARGB(155, 255, 214, 64),
+                                  elevation: 5,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: SizedBox(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        width: 360,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "CEP: ${cep.cep}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Logradouro: ${cep.logradouro}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Bairro: ${cep.bairro}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Cidade: ${cep.localidade}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                  ],
+                            );
+                          },
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               )
             ],
