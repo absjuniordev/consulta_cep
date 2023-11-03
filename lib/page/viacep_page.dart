@@ -66,17 +66,13 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                     ),
                     const SizedBox(height: 10),
                     TextFormField(
-                      // canRequestFocus:
-                      //     cepController.text.length == 8 ? false : true,
                       decoration: const InputDecoration(
                         label: Text("CEP"),
                         hintText: "44.000-000",
                       ),
                       controller: cepController,
-                      // maxLength: 8,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        // obrigatório
                         FilteringTextInputFormatter.digitsOnly,
                         CepInputFormatter(),
                       ],
@@ -88,21 +84,21 @@ class _ViaCEPPageState extends State<ViaCEPPage> {
                           setState(() {
                             loading = true;
                           });
-
-                          if (loading == true) {
-                            Timer(const Duration(seconds: 5), () {
-                              showDialog(
-                                  context: context,
-                                  builder: (bd) => const AlertDialog(
-                                        title:
-                                            Text("Tempo de consulta excedido"),
-                                      ));
-                              cepController.text = "";
-                              setState(() {
-                                loading = false;
-                              });
-                            });
-                          }
+                          //## teste
+                          // if (loading == true) {
+                          //   Timer(const Duration(seconds: 5), () {
+                          //     showDialog(
+                          //         context: context,
+                          //         builder: (bd) => const AlertDialog(
+                          //               title:
+                          //                   Text("Tempo de consulta excedido"),
+                          //             ));
+                          //     cepController.text = "";
+                          //     setState(() {
+                          //       loading = false;
+                          //     });
+                          //   });
+                          // }
 
                           _viaCEPModel =
                               await viaCEPRepository.consultarCEP(numerosCep);
